@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber-Lit: Operasi Pembasmi Hoaks - Kelas 5 SD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #06b6d4;
+            --neon-purple: #a855f7;
+            --cyber-dark: #090d16;
+            --cyber-panel: #111827;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #090d16 80%);
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+        .font-cyber {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 0.05em;
+        }
+        /* Cyber Neon Card Glossy */
+        .cyber-card {
+            background: linear-gradient(180deg, rgba(17, 24, 39, 0.92) 0%, rgba(9, 13, 22, 0.96) 100%);
+            border: 2px solid rgba(6, 182, 212, 0.5);
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.18), inset 0 0 15px rgba(6, 182, 212, 0.08);
+            backdrop-filter: blur(12px);
+        }
+        .cyber-card-danger {
+            background: linear-gradient(180deg, rgba(30, 9, 9, 0.92) 0%, rgba(15, 5, 5, 0.96) 100%);
+            border: 2px solid rgba(244, 63, 94, 0.6);
+            box-shadow: 0 0 30px rgba(244, 63, 94, 0.25);
+        }
+        /* Neon Buttons */
+        .btn-cyber {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-cyber:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);
+        }
+        .btn-cyan {
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            border: 2px solid #67e8f9;
+            color: #042f2e;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+        }
+        .btn-purple {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            border: 2px solid #f472b6;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+        }
+        /* 3D Hologram Canvas Stage */
+        #holo-stage-wrapper {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 2px solid #06b6d4;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3), inset 0 0 20px rgba(6, 182, 212, 0.2);
+            background: linear-gradient(180deg, #030712 0%, #0f172a 100%);
+        }
+        @media (min-width: 768px) {
+            #holo-stage-wrapper { height: 320px; }
+        }
+        #three-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        @keyframes pulse-alarm {
+            0%, 100% { border-color: rgba(244, 63, 94, 0.8); box-shadow: 0 0 15px rgba(244, 63, 94, 0.5); }
+            50% { border-color: rgba(244, 63, 94, 0.2); box-shadow: 0 0 5px rgba(244, 63, 94, 0.1); }
+        }
+        .alarm-active {
+            animation: pulse-alarm 1.2s infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-16 selection:bg-cyan-500 selection:text-cyan-950">
+
+    <!-- ==================== TOP HUD STATUS BAR ==================== -->
+    <header class="bg-slate-950/90 border-b-2 border-cyan-500/50 sticky top-0 z-40 shadow-2xl backdrop-blur-md">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+            
+            <!-- Brand Title -->
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 border border-cyan-200 flex items-center justify-center text-2xl shadow-lg">
+                    🛡️
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 text-[10px] font-cyber px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                            🤖 A.R.I.A AI System v5.0
+                        </span>
+                        <span class="bg-purple-500/20 text-purple-300 border border-purple-400/40 text-[10px] font-bold px-2 py-0.5 rounded-full hidden sm:inline">
+                            Kelas 5 SD • AKM Literasi Digital
+                        </span>
+                    </div>
+                    <h1 class="text-base sm:text-xl font-cyber font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-200 to-purple-400 leading-tight">
+                        CYBER-LIT: OPERASI PEMBASMI HOAKS
+                    </h1>
+                </div>
+            </div>
+
+            <!-- HUD Stats Pill & Controls -->
+            <div class="flex flex-wrap items-center gap-2.5">
+                <div id="hud-status-bar" class="flex items-center gap-3 bg-slate-900 px-4 py-2 rounded-xl border border-cyan-500/60 shadow-inner font-cyber text-xs">
+                    <div>
+                        <span class="text-cyan-400">Energi:</span> <span id="lives-display" class="text-rose-400 font-bold">❤️❤️❤️</span>
+                    </div>
+                    <div class="h-4 w-px bg-slate-700"></div>
+                    <div>
+                        <span class="text-cyan-400">Pangkat:</span> <span id="rank-display" class="text-amber-300 font-bold">Agen Pemula</span>
+                    </div>
+                    <div class="h-4 w-px bg-slate-700 hidden sm:block"></div>
+                    <div class="hidden sm:block">
+                        <span class="text-cyan-400">Lokasi:</span> <span id="location-display" class="text-sky-300 font-bold">Server Utama</span>
+                    </div>
+                </div>
+
+                <!-- Sound Toggle -->
+                <button onclick="toggleSound()" id="sound-btn" class="bg-slate-900 hover:bg-slate-800 text-cyan-300 p-2.5 rounded-xl border border-cyan-500/60 text-sm">
+                    🔊
+                </button>
+
+                <!-- Teacher Guide Mode -->
+                <button onclick="toggleTeacherMode()" id="teacher-btn" class="btn-cyber btn-purple px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5">
+                    <span>📋</span> <span id="teacher-btn-text">Panduan Guru</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== MAIN CONTAINER ==================== -->
+    <main class="max-w-6xl mx-auto px-4 mt-5">
+
+        <!-- ==================== GAME VIEW ==================== -->
+        <div id="game-view" class="space-y-5">
+
+            <!-- ==================== LOGIN / AGENT REGISTRATION SCREEN ==================== -->
+            <div id="login-screen" class="cyber-card rounded-2xl p-6 sm:p-8 max-w-xl mx-auto text-center">
+                <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-cyan-500/20 border-2 border-cyan-400 flex items-center justify-center text-4xl shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+                    🔐
+                </div>
+                <div class="text-xs font-cyber text-cyan-400 uppercase tracking-widest mb-1">Inisialisasi Sistem Keamanan</div>
+                <h2 class="text-2xl sm:text-3xl font-cyber font-bold text-white mb-3">
+                    Masukkan Nama Kode Agen
+                </h2>
+                <p class="text-slate-300 text-sm mb-6">
+                    A.R.I.A mendeteksi sinyal virus hoaks menyerang pangkalan data literasi nasional. Siapkan dirimu, Agen Muda!
+                </p>
+
+                <div class="space-y-4 max-w-md mx-auto">
+                    <input type="text" id="agent-name-input" placeholder="Contoh: Agen Bintang / Agen Rina" class="w-full bg-slate-900 border-2 border-cyan-500/70 rounded-xl px-4 py-3 text-white font-cyber text-center focus:outline-none focus:border-cyan-300 shadow-inner">
+                    <button onclick="startAgentMission()" class="w-full btn-cyber btn-cyan py-3.5 rounded-xl text-base shadow-lg">
+                        🚀 AKTIFKAN MISI SEKARANG
+                    </button>
+                </div>
+            </div>
+
+            <!-- ==================== ACTIVE MISSION STAGE (HIDDEN BEFORE LOGIN) ==================== -->
+            <div id="active-mission-wrapper" class="hidden space-y-5">
+
+                <!-- 3D Hologram Stage & A.R.I.A AI Dialogue -->
+                <div id="holo-stage-wrapper">
+                    <canvas id="three-canvas"></canvas>
+
+                    <!-- Top-Left Hologram Badge -->
+                    <div class="absolute top-3 left-3 bg-slate-950/80 border border-cyan-500/60 px-3 py-1.5 rounded-xl backdrop-blur-md flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+                        <span id="holo-stage-badge" class="font-cyber text-xs text-cyan-300 font-bold">LEVEL 1: RADAR FAKTA VS OPINI</span>
+                    </div>
+
+                    <!-- Bottom A.R.I.A AI Hologram Speech Bubble -->
+                    <div class="absolute bottom-3 left-3 right-3 cyber-card px-4 py-3 rounded-xl flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-700 border border-cyan-300 flex items-center justify-center text-2xl shrink-0 shadow">
+                            🤖
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="font-cyber text-xs text-cyan-400 font-bold">A.R.I.A (AI Operator)</span>
+                                <span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded border border-cyan-400/30">Live Transmission</span>
+                            </div>
+                            <p id="aria-dialogue-text" class="text-xs sm:text-sm font-medium text-slate-100 leading-snug mt-0.5">
+                                "🚨 PERINGATAN! Virus Hoaks terdeteksi mencoba menjebol perisai informasi. Analisis Pesan Berantai di bawah ini dengan teliti!"
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INVENTORY & MISSION PROGRESS BAR -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Progress / Level Indicator -->
+                    <div class="cyber-card rounded-2xl p-4 flex flex-col justify-between">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-cyber text-xs text-cyan-400 uppercase">Status Misi Saat Ini</span>
+                            <span id="level-badge-text" class="text-xs bg-cyan-500/20 text-cyan-300 px-2.5 py-0.5 rounded border border-cyan-400 font-cyber font-bold">Level 1 / 3</span>
+                        </div>
+                        <div class="w-full bg-slate-900 rounded-full h-3 border border-cyan-500/40 overflow-hidden">
+                            <div id="mission-progress-bar" class="bg-gradient-to-r from-cyan-500 to-purple-500 h-full transition-all duration-500" style="width: 33%;"></div>
+                        </div>
+                        <div class="text-[11px] text-slate-400 mt-2 flex justify-between">
+                            <span>Mulai: Server Utama</span>
+                            <span id="current-stage-desc">Fakta vs Opini</span>
+                        </div>
+                    </div>
+
+                    <!-- Inventory Tas Item (2 cols) -->
+                    <div class="md:col-span-2 cyber-card rounded-2xl p-4 flex flex-col justify-between">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-cyber text-xs text-purple-400 uppercase flex items-center gap-1.5">
+                                🎒 Tas Item Agen (<span id="item-count">0</span>/3 Item)
+                            </span>
+                            <span class="text-[11px] text-slate-400">Kumpulkan item untuk membuka Akses Bos Akhir</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div id="item-slot-0" class="bg-slate-900/80 border border-slate-700 rounded-xl p-2.5 flex items-center gap-2 opacity-40 transition-all">
+                                <span class="text-xl">🔍</span>
+                                <div>
+                                    <div class="font-cyber text-[10px] text-slate-300 font-bold">Decoder Fakta</div>
+                                    <div class="text-[9px] text-slate-500">Level 1 Reward</div>
+                                </div>
+                            </div>
+                            <div id="item-slot-1" class="bg-slate-900/80 border border-slate-700 rounded-xl p-2.5 flex items-center gap-2 opacity-40 transition-all">
+                                <span class="text-xl">🗝️</span>
+                                <div>
+                                    <div class="font-cyber text-[10px] text-slate-300 font-bold">Kunci Sandi</div>
+                                    <div class="text-[9px] text-slate-500">Level 2 Reward</div>
+                                </div>
+                            </div>
+                            <div id="item-slot-2" class="bg-slate-900/80 border border-slate-700 rounded-xl p-2.5 flex items-center gap-2 opacity-40 transition-all">
+                                <span class="text-xl">🛡️</span>
+                                <div>
+                                    <div class="font-cyber text-[10px] text-slate-300 font-bold">Perisai Anti-Hoaks</div>
+                                    <div class="text-[9px] text-slate-500">Boss Reward</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MISSION QUESTION & INTERACTIVE CARD -->
+                <div class="cyber-card rounded-2xl p-5 sm:p-7">
+                    <div class="flex flex-wrap justify-between items-center gap-3 border-b border-cyan-500/30 pb-4 mb-5">
+                        <div>
+                            <span id="mission-step-tag" class="font-cyber text-xs bg-cyan-500/20 text-cyan-300 px-3 py-1 rounded border border-cyan-400/40 uppercase">
+                                TANTANGAN LEVEL 1: RADAR FAKTA VS OPINI
+                            </span>
+                            <h3 id="mission-title" class="text-lg sm:text-2xl font-cyber font-bold text-white mt-1.5">
+                                Analisis Pesan Berantai Misterius
+                            </h3>
+                        </div>
+
+                        <!-- Accessibility / Scan Hint Button -->
+                        <button onclick="useScanHint()" class="btn-cyber bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-cyan-500/60 px-3.5 py-2 rounded-xl text-xs font-cyber flex items-center gap-1.5">
+                            <span>💡</span> <span>Scan Petunjuk A.R.I.A</span>
+                        </button>
+                    </div>
+
+                    <!-- Reading Text Box -->
+                    <div class="bg-slate-950/80 border border-cyan-500/40 rounded-xl p-4 sm:p-5 mb-5 shadow-inner">
+                        <div class="text-[11px] font-cyber text-cyan-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                            <span>📜</span> Dokumen / Pesan yang Disadap Sistem:
+                        </div>
+                        <div id="reading-text-content" class="text-base sm:text-lg leading-relaxed text-slate-200 font-medium text-justify">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Question & Options -->
+                    <div>
+                        <p id="question-text" class="text-base sm:text-lg font-bold text-white mb-4 leading-snug">
+                            <!-- Injected by JS -->
+                        </p>
+                        <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Feedback Box (Hidden initially) -->
+                    <div id="feedback-box" class="hidden mt-6 rounded-2xl p-5 border-2 transition-all">
+                        <div class="flex items-start gap-4">
+                            <div id="feedback-icon" class="w-12 h-12 rounded-xl bg-slate-900 border border-cyan-400 flex items-center justify-center text-2xl shrink-0">
+                                🎉
+                            </div>
+                            <div class="flex-1">
+                                <h4 id="feedback-title" class="font-cyber text-lg font-bold text-white mb-1">
+                                    Analisis Tepat!
+                                </h4>
+                                <p id="feedback-explanation" class="text-sm text-slate-200 leading-relaxed mb-4">
+                                    <!-- Explanation -->
+                                </p>
+                                <button onclick="nextMissionLevel()" class="btn-cyber btn-cyan px-6 py-2.5 rounded-xl text-sm">
+                                    Lanjutkan ke Misi Berikutnya ➔
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ==================== VICTORY SCREEN ==================== -->
+            <div id="victory-screen" class="hidden cyber-card rounded-2xl p-8 sm:p-10 text-center max-w-2xl mx-auto">
+                <div class="w-24 h-24 mx-auto mb-4 rounded-3xl bg-gradient-to-br from-cyan-400 via-blue-600 to-purple-600 border-2 border-cyan-200 flex items-center justify-center text-5xl shadow-[0_0_30px_rgba(6,182,212,0.6)]">
+                    🏆
+                </div>
+                <div class="inline-block mb-2">
+                    <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 text-xs font-cyber px-3 py-1 rounded-full uppercase">
+                        MISI UTAMA SELESAI • SERVER AMAN
+                    </span>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-cyber font-bold text-white mb-2">
+                    Selamat, Agen <span id="final-agent-name" class="text-cyan-400">Muda</span>!
+                </h2>
+                <p class="text-slate-300 text-sm sm:text-base max-w-lg mx-auto mb-6 leading-relaxed">
+                    Kamu telah berhasil mengalahkan Bos Virus Hoaks, mendekode laporan rahasia, dan menyaring berita palsu dengan sangat teliti. Pangkatmu kini resmi naik menjadi <strong class="text-amber-300">Master Cyber-Lit</strong>!
+                </p>
+                <button onclick="resetGame()" class="btn-cyber btn-cyan px-8 py-3.5 rounded-xl text-base">
+                    🔄 Mainkan Ulang Misi Baru
+                </button>
+            </div>
+
+        </div>
+
+        <!-- ==================== TEACHER GUIDE & PRINTABLE LKPD ==================== -->
+        <div id="teacher-view" class="hidden cyber-card rounded-2xl p-6 sm:p-8 space-y-6">
+            <div class="flex flex-wrap justify-between items-center gap-4 border-b border-cyan-500/40 pb-5">
+                <div>
+                    <span class="bg-purple-500/20 text-purple-300 text-xs font-cyber px-3 py-1 rounded-full border border-purple-400/50 uppercase">
+                        Pegangan Guru Kelas 5 SD • Kurikulum Merdeka
+                    </span>
+                    <h2 class="text-2xl font-cyber font-bold text-white mt-1.5">
+                        Panduan & Kunci Jawaban "Cyber-Lit: Operasi Pembasmi Hoaks"
+                    </h2>
+                    <p class="text-sm text-slate-300">
+                        Fokus AKM: Membedakan Fakta vs Opini, Makna Kosakata Berdasarkan Konteks, dan Simpulan Sebab-Akibat.
+                    </p>
+                </div>
+                <button onclick="toggleTeacherMode()" class="btn-cyber btn-cyan px-5 py-2.5 rounded-xl text-xs">
+                    🎮 Kembali ke Game
+                </button>
+            </div>
+
+            <!-- Teacher Content List -->
+            <div id="teacher-content-list" class="space-y-6">
+                <!-- Injected by JS -->
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // ==================== DATA LEVEL MISI CYBER-LIT ====================
+        const gameLevels = [
+            {
+                level: 1,
+                tag: "TANTANGAN LEVEL 1: RADAR FAKTA VS OPINI",
+                title: "Analisis Pesan Berantai Misterius",
+                stageDesc: "Fakta vs Opini",
+                ariaMsg: "🚨 PERINGATAN! Virus Hoaks mencoba memalsukan informasi kesehatan. Pilih kalimat mana yang benar-benar merupakan Fakta Terbukti!",
+                readingText: `"Pesan Berantai WhatsApp: Minum air rebusan bawang putih setiap malam dapat langsung menyembuhkan flu dalam waktu 5 menit tanpa obat dokter! Menurutku, bawang putih adalah tanaman paling ajaib di bumi yang rasanya sangat lezat."`,
+                question: "Berdasarkan pesan di atas, manakah kalimat yang merupakan FAKTA TERBUKTI (bukan opini atau hoaks)?",
+                options: [
+                    { label: "A", text: "Minum air rebusan bawang putih langsung menyembuhkan flu dalam 5 menit.", isCorrect: false },
+                    { label: "B", text: "Bawang putih adalah tanaman yang memiliki aroma khas dan siung umbi berlapis.", isCorrect: true },
+                    { label: "C", text: "Bawang putih adalah tanaman paling ajaib di bumi.", isCorrect: false },
+                    { label: "D", text: "Semua orang pasti setuju bahwa rasa bawang putih sangat lezat.", isCorrect: false }
+                ],
+                hint: "Fakta adalah hal yang terbukti secara ilmiah (seperti ciri fisik tanaman), sedangkan klaim menyembuhkan dalam 5 menit dan kata 'paling ajaib' adalah opini/hoaks.",
+                explanation: "Pilihan B adalah <strong>Fakta</strong> karena sifat fisik bawang putih dapat dibuktikan secara ilmiah. Pilihan A adalah hoaks kesehatan, sedangkan C dan D adalah pendapat pribadi (opini).",
+                rewardItem: "Decoder Fakta",
+                rewardIcon: "🔍"
+            },
+            {
+                level: 2,
+                tag: "TANTANGAN LEVEL 2: DEKODER KOSAKATA & ANTONIM/SINONIM",
+                title: "Membuka Brankas Sandi Digital",
+                stageDesc: "Makna Kata Sulit",
+                ariaMsg: "🔓 Brankas data terkunci oleh sistem sandi. Perhatikan kata-kata bercetak tebal dalam laporan rahasia berikut!",
+                readingText: `Laporan Rahasia Laboratorium: "Para peneliti menyimpulkan bahwa sampah plastik di lautan bersifat <strong class="text-cyan-300">labil</strong> dan mudah terurai menjadi partikel mikroskopis. Selain itu, kondisi terumbu karang saat ini sangat <strong class="text-cyan-300">rentan</strong> terhadap perubahan suhu air laut yang ekstrem."`,
+                question: "Apakah arti dari kata 'labil' dan 'rentan' yang dicetak tebal pada laporan di atas?",
+                options: [
+                    { label: "A", text: "Labil = sangat kuat; Rentan = kebal terhadap penyakit.", isCorrect: false },
+                    { label: "B", text: "Labil = mudah berubah atau tidak tetap; Rentan = mudah terkena pengaruh atau rusak.", isCorrect: true },
+                    { label: "C", text: "Labil = sangat kaku; Rentan = aman dari bahaya.", isCorrect: false },
+                    { label: "D", text: "Labil = berat dan padat; Rentan = berukuran sangat besar.", isCorrect: false }
+                ],
+                hint: "Perhatikan kalimat setelahnya: 'mudah terurai' (labil) dan 'terhadap perubahan suhu air laut' (rentan rusak).",
+                explanation: "Kata <strong>'labil'</strong> berarti mudah berubah atau tidak stabil, sedangkan <strong>'rentan'</strong> berarti mudah terkena gangguan, rusak, atau rapuh.",
+                rewardItem: "Kunci Sandi",
+                rewardIcon: "🗝️"
+            },
+            {
+                level: 3,
+                tag: "TANTANGAN LEVEL 3: PERTARUNGAN BOS - SEBAB AKIBAT & SIMPULAN",
+                title: "Pertarungan Akhir: Mengalahkan Bos Virus Hoaks",
+                stageDesc: "Pertarungan Bos",
+                ariaMsg: "⚠️ PERHATIAN! Bos Virus Hoaks menyebarkan berita palsu tentang krisis iklim. Analisis teks eksplanasi ini untuk melumpuhkannya!",
+                readingText: `Teks Eksplanasi Lingkungan: "Pemanasan global terjadi akibat meningkatnya gas rumah kaca dari pembakaran bahan bakar fosil dan penebangan hutan secara liar. Hal ini menyebabkan es di kutub mencair dan permukaan air laut naik. Solusi paling mendesak adalah menghemat energi listrik serta melakukan reboisasi hutan gundul secara massal."`,
+                question: "Apakah akar penyebab utama dan solusi paling logis untuk mengatasi masalah dalam teks tersebut?",
+                options: [
+                    { label: "A", text: "Penyebab: Kurangnya turis di pantai; Solusi: Membangun gedung tinggi.", isCorrect: false },
+                    { label: "B", text: "Penyebab: Gas rumah kaca dari bahan bakar & penebangan hutan; Solusi: Menghemat energi & reboisasi.", isCorrect: true },
+                    { label: "C", text: "Penyebab: Terlalu banyak es di kutub; Solusi: Membuang sampah ke sungai.", isCorrect: false },
+                    { label: "D", text: "Penyebab: Hujan deras setiap hari; Solusi: Membiarkan hutan tetap gundul.", isCorrect: false }
+                ],
+                hint: "Cari kalimat yang diawali kata 'akibat' (penyebab) dan kalimat yang menunjukkan 'solusi paling mendesak' di akhir teks.",
+                explanation: "Berdasarkan teks eksplanasi tersebut, akar penyebab utamanya adalah <strong>gas rumah kaca dan penebangan hutan</strong>, sedangkan solusi nyatanya adalah <strong>menghemat energi dan reboisasi</strong>.",
+                rewardItem: "Perisai Anti-Hoaks",
+                rewardIcon: "🛡️"
+            }
+        ];
+
+        // ==================== STATE GAME ====================
+        let agentName = "";
+        let currentLevelIdx = 0;
+        let lives = 3;
+        let collectedItems = [];
+        let soundEnabled = true;
+
+        // ==================== THREE.JS 3D HOLOGRAM SCENE ====================
+        let scene, camera, renderer, holoCore, ringGroup, particlesMesh;
+        let holoSpinSpeed = 0.01;
+
+        function initHolo3D() {
+            const container = document.getElementById('holo-stage-wrapper');
+            const canvas = document.getElementById('three-canvas');
+
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+            camera.position.set(0, 0, 7.5);
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            // Hologram Sci-Fi Core (Icosahedron)
+            const coreGeo = new THREE.IcosahedronGeometry(1.4, 1);
+            const coreMat = new THREE.MeshStandardMaterial({
+                color: 0x06b6d4,
+                wireframe: true,
+                emissive: 0x0891b2,
+                roughness: 0.2
+            });
+            holoCore = new THREE.Mesh(coreGeo, coreMat);
+            scene.add(holoCore);
+
+            // Inner glowing sphere
+            const innerGeo = new THREE.SphereGeometry(0.9, 32, 32);
+            const innerMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.35 });
+            const innerSphere = new THREE.Mesh(innerGeo, innerMat);
+            scene.add(innerSphere);
+
+            // Orbiting Sci-Fi Rings
+            ringGroup = new THREE.Group();
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0xa855f7, wireframe: true, transparent: true, opacity: 0.7 });
+            for (let i = 0; i < 3; i++) {
+                const ring = new THREE.Mesh(new THREE.TorusGeometry(2.1 + i * 0.4, 0.04, 16, 64), ringMat);
+                ring.rotation.x = Math.random() * Math.PI;
+                ring.rotation.y = Math.random() * Math.PI;
+                ringGroup.add(ring);
+            }
+            scene.add(ringGroup);
+
+            // Floating Cyber Particles
+            const pGeo = new THREE.BufferGeometry();
+            const pCount = 120;
+            const posArr = new Float32Array(pCount * 3);
+            for (let i = 0; i < pCount * 3; i++) {
+                posArr[i] = (Math.random() - 0.5) * 12;
+            }
+            pGeo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+            const pMat = new THREE.PointsMaterial({ color: 0x67e8f9, size: 0.08, transparent: true, opacity: 0.8 });
+            particlesMesh = new THREE.Points(pGeo, pMat);
+            scene.add(particlesMesh);
+
+            // Lighting
+            const ambient = new THREE.AmbientLight(0xffffff, 1.2);
+            scene.add(ambient);
+
+            window.addEventListener('resize', onResizeHolo);
+            animateHolo();
+        }
+
+        function onResizeHolo() {
+            const container = document.getElementById('holo-stage-wrapper');
+            if (!container || !renderer) return;
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        let clock = new THREE.Clock();
+        function animateHolo() {
+            requestAnimationFrame(animateHolo);
+            const t = clock.getElapsedTime();
+
+            if (holoCore) {
+                holoCore.rotation.x = t * 0.5;
+                holoCore.rotation.y = t * 0.7;
+            }
+            if (ringGroup) {
+                ringGroup.rotation.z = t * 0.3;
+                ringGroup.rotation.y = t * 0.2;
+            }
+            if (particlesMesh) {
+                particlesMesh.rotation.y = t * 0.05;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // ==================== WEB AUDIO SOUND FX ====================
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function playTone(freq, type = 'sine', duration = 0.15, delay = 0) {
+            if (!soundEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new AudioCtx();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime + delay);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime + delay);
+                osc.stop(audioCtx.currentTime + delay + duration);
+            } catch (e) {}
+        }
+
+        function sfxClick() { playTone(600, 'triangle', 0.08); }
+        function sfxSuccess() {
+            playTone(523.25, 'sine', 0.12, 0);
+            playTone(659.25, 'sine', 0.12, 0.1);
+            playTone(783.99, 'sine', 0.15, 0.2);
+            playTone(1046.50, 'triangle', 0.3, 0.3);
+        }
+        function sfxWrong() {
+            playTone(220, 'sawtooth', 0.2, 0);
+            playTone(150, 'sawtooth', 0.3, 0.15);
+        }
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-btn').innerText = soundEnabled ? '🔊' : '🔇';
+            if (soundEnabled) sfxClick();
+        }
+
+        // ==================== GAME CONTROLLER LOGIC ====================
+        function startAgentMission() {
+            const input = document.getElementById('agent-name-input').value.trim();
+            if (!input) {
+                alert("Mohon masukkan Nama Kode Agen terlebih dahulu!");
+                return;
+            }
+            agentName = input;
+            sfxSuccess();
+
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('active-mission-wrapper').classList.remove('hidden');
+
+            setTimeout(onResizeHolo, 50);
+            renderLevel();
+        }
+
+        function renderLevel() {
+            const lvl = gameLevels[currentLevelIdx];
+            
+            document.getElementById('holo-stage-badge').innerText = lvl.tag;
+            document.getElementById('aria-dialogue-text').innerText = `"${lvl.ariaMsg}"`;
+            document.getElementById('level-badge-text').innerText = `Level ${lvl.level} / 3`;
+            document.getElementById('mission-step-tag').innerText = lvl.tag;
+            document.getElementById('mission-title').innerText = lvl.title;
+            document.getElementById('current-stage-desc').innerText = lvl.stageDesc;
+            document.getElementById('mission-progress-bar').style.width = `${((currentLevelIdx + 1) / 3) * 100}%`;
+
+            document.getElementById('reading-text-content').innerHTML = lvl.readingText;
+            document.getElementById('question-text').innerText = lvl.question;
+            document.getElementById('feedback-box').classList.add('hidden');
+
+            const optContainer = document.getElementById('options-container');
+            optContainer.innerHTML = '';
+
+            lvl.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = `btn-cyber bg-slate-900 hover:bg-slate-800 text-left p-4 rounded-xl border border-cyan-500/40 flex items-start gap-3.5 transition group`;
+                btn.innerHTML = `
+                    <span class="w-9 h-9 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 font-cyber font-bold text-base flex items-center justify-center shrink-0 group-hover:bg-cyan-500 group-hover:text-cyan-950 transition">
+                        ${opt.label}
+                    </span>
+                    <span class="text-sm sm:text-base font-semibold text-slate-200 leading-snug pt-1">
+                        ${opt.text}
+                    </span>
+                `;
+                btn.onclick = () => handleAnswer(opt.isCorrect, opt.label);
+                optContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(isCorrect, label) {
+            const lvl = gameLevels[currentLevelIdx];
+            const fbBox = document.getElementById('feedback-box');
+            const fbIcon = document.getElementById('feedback-icon');
+            const fbTitle = document.getElementById('feedback-title');
+            const fbExp = document.getElementById('feedback-explanation');
+
+            fbBox.classList.remove('hidden');
+
+            if (isCorrect) {
+                sfxSuccess();
+                fbBox.className = "mt-6 rounded-2xl p-5 border-2 border-emerald-500/80 bg-emerald-950/40";
+                fbIcon.innerText = "🎉";
+                fbTitle.innerText = `Akses Diterima! Pilihan (${label}) Tepat!`;
+                fbExp.innerHTML = `<span class="text-emerald-200"><strong>Analisis A.R.I.A:</strong> ${lvl.explanation}</span>`;
+
+                if (!collectedItems.includes(lvl.rewardItem)) {
+                    collectedItems.push(lvl.rewardItem);
+                    updateInventoryUI();
+                }
+            } else {
+                sfxWrong();
+                fbBox.className = "mt-6 rounded-2xl p-5 border-2 border-rose-500/80 bg-rose-950/40";
+                fbIcon.innerText = "⚠️";
+                fbTitle.innerText = `Akses Ditolak! Pilihan (${label}) Belum Tepat!`;
+                fbExp.innerHTML = `<span class="text-rose-200"><strong>Scan Petunjuk A.R.I.A:</strong> ${lvl.hint}</span>`;
+
+                if (lives > 1) lives--;
+                updateHUDStatus();
+            }
+            fbBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function useScanHint() {
+            sfxClick();
+            const lvl = gameLevels[currentLevelIdx];
+            alert(`💡 Scan Petunjuk A.R.I.A:\n${lvl.hint}`);
+        }
+
+        function updateHUDStatus() {
+            document.getElementById('lives-display').innerText = '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);
+        }
+
+        function updateInventoryUI() {
+            document.getElementById('item-count').innerText = collectedItems.length;
+            gameLevels.forEach((lvl, i) => {
+                const slot = document.getElementById(`item-slot-${i}`);
+                if (collectedItems.includes(lvl.rewardItem)) {
+                    slot.classList.remove('opacity-40', 'border-slate-700');
+                    slot.classList.add('opacity-100', 'border-cyan-400', 'bg-cyan-950/60', 'shadow-[0_0_15px_rgba(6,182,212,0.3)]');
+                }
+            });
+
+            // Update rank
+            if (collectedItems.length === 1) document.getElementById('rank-display').innerText = "Agen Intelijen";
+            if (collectedItems.length === 2) document.getElementById('rank-display').innerText = "Komandan Siber";
+            if (collectedItems.length === 3) document.getElementById('rank-display').innerText = "Master Cyber-Lit";
+        }
+
+        function nextMissionLevel() {
+            sfxClick();
+            if (currentLevelIdx < gameLevels.length - 1) {
+                currentLevelIdx++;
+                renderLevel();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                sfxSuccess();
+                document.getElementById('active-mission-wrapper').classList.add('hidden');
+                document.getElementById('victory-screen').classList.remove('hidden');
+                document.getElementById('final-agent-name').innerText = agentName;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function resetGame() {
+            sfxClick();
+            currentLevelIdx = 0;
+            lives = 3;
+            collectedItems = [];
+            updateHUDStatus();
+            updateInventoryUI();
+            document.getElementById('victory-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('agent-name-input').value = "";
+        }
+
+        // ==================== TEACHER GUIDE MODE ====================
+        let isTeacherMode = false;
+        function toggleTeacherMode() {
+            sfxClick();
+            isTeacherMode = !isTeacherMode;
+            const gameView = document.getElementById('game-view');
+            const teacherView = document.getElementById('teacher-view');
+            const btnText = document.getElementById('teacher-btn-text');
+
+            if (isTeacherMode) {
+                gameView.classList.add('hidden');
+                teacherView.classList.remove('hidden');
+                btnText.innerText = "Game Utama";
+                renderTeacherContent();
+            } else {
+                teacherView.classList.add('hidden');
+                gameView.classList.remove('hidden');
+                btnText.innerText = "Panduan Guru";
+                setTimeout(onResizeHolo, 50);
+            }
+        }
+
+        function renderTeacherContent() {
+            const container = document.getElementById('teacher-content-list');
+            container.innerHTML = gameLevels.map(lvl => `
+                <div class="bg-slate-950/80 border border-cyan-500/40 rounded-2xl p-6">
+                    <div class="flex justify-between items-center border-b border-cyan-500/30 pb-3 mb-4">
+                        <h3 class="font-cyber text-lg font-bold text-cyan-300">Level ${lvl.level}: ${lvl.title}</h3>
+                        <span class="text-xs bg-cyan-500/20 text-cyan-300 px-3 py-1 rounded border border-cyan-400/40">${lvl.tag}</span>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-xs font-cyber text-slate-400 uppercase mb-1">Teks / Kasus Bacaan:</div>
+                        <p class="text-sm text-slate-200 bg-slate-900 p-3.5 rounded-xl border border-slate-800 leading-relaxed">${lvl.readingText}</p>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-xs font-cyber text-slate-400 uppercase mb-1">Pertanyaan AKM:</div>
+                        <p class="text-sm font-bold text-white mb-2">${lvl.question}</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                            ${lvl.options.map(o => `
+                                <div class="${o.isCorrect ? 'bg-emerald-950/60 border border-emerald-500 text-emerald-200 font-bold' : 'bg-slate-900 border border-slate-800 text-slate-300'} p-2.5 rounded-xl">
+                                    <strong>${o.label}.</strong> ${o.text} ${o.isCorrect ? '✅ (Kunci)' : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="bg-cyan-950/40 border border-cyan-500/40 p-3.5 rounded-xl text-xs">
+                        <span class="font-cyber text-cyan-300 font-bold">Kunci Jawaban & Pembahasan:</span>
+                        <p class="text-slate-200 mt-1 leading-relaxed">${lvl.explanation}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.onload = function() {
+            initHolo3D();
+            updateHUDStatus();
+        };
+    </script>
+</body>
+</html>
